@@ -4,9 +4,10 @@ import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Objects;
 
 @Entity
-@Table(name = "Biometric_records")
+@Table(name = "biometric_records")
 public class BiometricRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -82,5 +83,18 @@ public class BiometricRecord {
 
     public void setProject(Project project) {
         this.project = project;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        BiometricRecord that = (BiometricRecord) object;
+        return Objects.equals(employee, that.employee) && Objects.equals(name, that.name) && Objects.equals(date, that.date) && Objects.equals(time, that.time) && Objects.equals(recordOrigin, that.recordOrigin) && Objects.equals(project, that.project);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(employee, name, date, time, recordOrigin, project);
     }
 }

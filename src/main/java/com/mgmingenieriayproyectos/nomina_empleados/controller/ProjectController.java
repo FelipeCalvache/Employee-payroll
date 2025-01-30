@@ -1,8 +1,6 @@
 package com.mgmingenieriayproyectos.nomina_empleados.controller;
 
 import com.mgmingenieriayproyectos.nomina_empleados.model.Project;
-import com.mgmingenieriayproyectos.nomina_empleados.repository.ProjectRepository;
-import com.mgmingenieriayproyectos.nomina_empleados.service.AttendanceService;
 import com.mgmingenieriayproyectos.nomina_empleados.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,7 +30,7 @@ public class ProjectController {
 
     @GetMapping("{id}")
     public ResponseEntity<Project> getProyect(@PathVariable Long id){
-        Optional<Project> project = projectService.getProject(id);
+        Optional<Project> project = projectService.findById(id);
         return project.map(value -> ResponseEntity.status(HttpStatus.OK).body(value)).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 }

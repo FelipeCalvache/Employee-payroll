@@ -1,17 +1,24 @@
 package com.mgmingenieriayproyectos.nomina_empleados.model;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 
+@Entity
+@Table(name = "work_days")
 public class WorkDay {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @OneToOne
+    @JoinColumn(name = "start_id")
     private BiometricRecord start;
+
+    @OneToOne
+    @JoinColumn(name = "end_id", nullable = true)
     private BiometricRecord end;
+
     @ManyToOne
+    @JoinColumn(name = "employee_id")
     private Employee employee;
 
     public Long getId() {

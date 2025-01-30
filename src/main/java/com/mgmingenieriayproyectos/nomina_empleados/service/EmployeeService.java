@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Optional;
 
 @Service
 public class EmployeeService {
@@ -47,5 +48,15 @@ public class EmployeeService {
         } catch (IOException e) {
             throw new IOException("Error al procesar el archivo Excel", e);
         }
+    }
+
+    public Optional<Employee> findByIdentification(String identification){
+        Optional<Employee> employee = employeeRepository.findByIdentification(identification);
+        if (employee.isPresent()) {
+            System.out.println("Project found: " + employee.get().getName());
+        } else {
+            System.out.println("No identification found with identification: " + identification );
+        }
+        return employee;
     }
 }
