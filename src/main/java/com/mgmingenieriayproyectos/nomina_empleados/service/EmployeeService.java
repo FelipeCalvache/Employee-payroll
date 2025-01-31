@@ -1,7 +1,6 @@
 package com.mgmingenieriayproyectos.nomina_empleados.service;
 
 import com.mgmingenieriayproyectos.nomina_empleados.model.Employee;
-import com.mgmingenieriayproyectos.nomina_empleados.model.Project;
 import com.mgmingenieriayproyectos.nomina_empleados.repository.EmployeeRepository;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -11,8 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.Optional;
 
 @Service
@@ -38,6 +35,7 @@ public class EmployeeService {
                 String employeeId = row.getCell(0).getStringCellValue();
                 if (!employeeRepository.existsByIdentification(employeeId)) {
                     String name = row.getCell(1).getStringCellValue();
+                    // Todo revisar como hacer para el password y el rol no esten quemados
                     Employee employee = new Employee(name, employeeId, "123", "EMPLOYEE");
                     employeeRepository.save(employee);
                     cantEmployeeLoaded++;
@@ -51,12 +49,6 @@ public class EmployeeService {
     }
 
     public Optional<Employee> findByIdentification(String identification){
-        Optional<Employee> employee = employeeRepository.findByIdentification(identification);
-        if (employee.isPresent()) {
-            System.out.println("Project found: " + employee.get().getName());
-        } else {
-            System.out.println("No identification found with identification: " + identification );
-        }
-        return employee;
+        return employeeRepository.findByIdentification(identification);
     }
 }

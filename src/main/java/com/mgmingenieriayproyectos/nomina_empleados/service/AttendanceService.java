@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class AttendanceService {
@@ -26,19 +27,22 @@ public class AttendanceService {
     private final ProjectService projectService;
 
     private final EmployeeService employeeService;
+    private final WorkDayService workDayService;
     private final AttendanceRecordRepository attendanceRecordRepository;
 
-
-    public AttendanceService(ProjectService projectService, EmployeeService employeeService, AttendanceRecordRepository attendanceRecordRepository) {
+    public AttendanceService(ProjectService projectService, EmployeeService employeeService, WorkDayService workDayService, AttendanceRecordRepository attendanceRecordRepository) {
         this.projectService = projectService;
         this.employeeService = employeeService;
+        this.workDayService = workDayService;
         this.attendanceRecordRepository = attendanceRecordRepository;
     }
 
     public void processAttendanceFile(MultipartFile file) throws IOException {
+
+        List<BiometricRecord> biometricRecordList = new ArrayList<>();
+
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
 
-            List<BiometricRecord> biometricRecordList = new ArrayList<>();
             Sheet sheet = workbook.getSheetAt(0);
             for (Row row : sheet) {
                 if (row.getRowNum() == 0 || row.getRowNum() == 1) continue; // Saltar encabezados
@@ -60,17 +64,26 @@ public class AttendanceService {
                     BiometricRecord biometricRecord = new BiometricRecord(employee.get(), name, date, time, recordOrigin, project.get());
                     biometricRecordList.add(biometricRecord);
                 } else {
+                    //Todo manejar el error en el caso en que no exista empleado o proyecto
                     log.warn("No se pudo procesar el registro: Empleado={} o Proyecto={} no encontrado",
                             identification, recordOrigin);
-                }
-                Set<BiometricRecord> biometricRecordSet = new HashSet<>(biometricRecordList);
-
-                for (BiometricRecord biometricRecord : biometricRecordSet) {
-                    attendanceRecordRepository.save(biometricRecord);
                 }
             }
         } catch (IOException e) {
             throw new IOException("Error al procesar el archivo Excel", e);
         }
+
+        Set<BiometricRecord> biometricRecordSet = new HashSet<>(biometricRecordList);
+
+        Map<String, List<BiometricRecord>> groupByIdentification = biometricRecordSet.stream()
+                .collect(Collectors.groupingBy(item -> item.getEmployee().getIdentification()));
+
+        for (BiometricRecord biometricRecord : biometricRecordSet) {
+            attendanceRecordRepository.save(biometricRecord);
+        }
+
+        workDayService.processWorkdays(groupByIdentification);
+
     }
+
 }
