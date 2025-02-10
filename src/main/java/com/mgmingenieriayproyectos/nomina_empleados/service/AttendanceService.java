@@ -23,67 +23,68 @@ import java.util.stream.Collectors;
 @Service
 public class AttendanceService {
 
-    private static final Logger log = LoggerFactory.getLogger(AttendanceService.class);
-    private final ProjectService projectService;
+  private static final Logger log = LoggerFactory.getLogger(AttendanceService.class);
+  private final ProjectService projectService;
 
-    private final EmployeeService employeeService;
-    private final WorkDayService workDayService;
-    private final AttendanceRecordRepository attendanceRecordRepository;
+  private final EmployeeService employeeService;
+  private final WorkDayService workDayService;
+  private final AttendanceRecordRepository attendanceRecordRepository;
 
-    public AttendanceService(ProjectService projectService, EmployeeService employeeService, WorkDayService workDayService, AttendanceRecordRepository attendanceRecordRepository) {
-        this.projectService = projectService;
-        this.employeeService = employeeService;
-        this.workDayService = workDayService;
-        this.attendanceRecordRepository = attendanceRecordRepository;
+  public AttendanceService(ProjectService projectService, EmployeeService employeeService, WorkDayService workDayService, AttendanceRecordRepository attendanceRecordRepository) {
+    this.projectService = projectService;
+    this.employeeService = employeeService;
+    this.workDayService = workDayService;
+    this.attendanceRecordRepository = attendanceRecordRepository;
+  }
+
+  public void processAttendanceFile(MultipartFile file) throws IOException {
+
+    List<BiometricRecord> biometricRecordList = new ArrayList<>();
+
+    try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+
+      Sheet sheet = workbook.getSheetAt(0);
+      for (Row row : sheet) {
+        if (row.getRowNum() == 0 || row.getRowNum() == 1) continue;
+        log.warn("entro al try");
+        String identification = row.getCell(0).getStringCellValue();
+        Optional<Employee> employee = employeeService.findByIdentification(identification);
+
+        String name = row.getCell(1).getStringCellValue();
+        String stringDate = row.getCell(2).getStringCellValue();
+        LocalDate date = LocalDate.parse(stringDate);
+
+        String stringTime = row.getCell(3).getStringCellValue();
+        LocalTime time = LocalTime.parse(stringTime);
+
+        String recordOrigin = row.getCell(4).getStringCellValue();
+
+        Optional<Project> project = projectService.findByName(recordOrigin);
+        if (project.isPresent() && employee.isPresent()) {
+          BiometricRecord biometricRecord = new BiometricRecord(employee.get(), name, date, time, recordOrigin, project.get());
+          biometricRecordList.add(biometricRecord);
+        } else {
+          //Todo manejar el error en el caso en que no exista empleado o proyecto
+          log.warn("No se pudo procesar el registro: Empleado={} o Proyecto={} no encontrado",
+                  identification, recordOrigin);
+        }
+      }
+    } catch (IOException e) {
+      log.error("Error al procesar el archivo Excel", e);
+      throw new IOException("Error al procesar el archivo Excel", e);
     }
 
-    public void processAttendanceFile(MultipartFile file) throws IOException {
+    Set<BiometricRecord> biometricRecordSet = new HashSet<>(biometricRecordList);
 
-        List<BiometricRecord> biometricRecordList = new ArrayList<>();
+    Map<String, List<BiometricRecord>> groupByIdentification = biometricRecordSet.stream()
+            .collect(Collectors.groupingBy(item -> item.getEmployee().getIdentification()));
 
-        try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
-
-            Sheet sheet = workbook.getSheetAt(0);
-            for (Row row : sheet) {
-                if (row.getRowNum() == 0 || row.getRowNum() == 1) continue; // Saltar encabezados
-
-                String identification = row.getCell(0).getStringCellValue();
-                Optional<Employee> employee = employeeService.findByIdentification(identification);
-
-                String name = row.getCell(1).getStringCellValue();
-                String stringDate = row.getCell(2).getStringCellValue();
-                LocalDate date = LocalDate.parse(stringDate);
-
-                String stringTime = row.getCell(3).getStringCellValue();
-                LocalTime time = LocalTime.parse(stringTime);
-
-                String recordOrigin = row.getCell(4).getStringCellValue();
-
-                Optional<Project> project = projectService.findByName(recordOrigin);
-                if (project.isPresent() && employee.isPresent()) {
-                    BiometricRecord biometricRecord = new BiometricRecord(employee.get(), name, date, time, recordOrigin, project.get());
-                    biometricRecordList.add(biometricRecord);
-                } else {
-                    //Todo manejar el error en el caso en que no exista empleado o proyecto
-                    log.warn("No se pudo procesar el registro: Empleado={} o Proyecto={} no encontrado",
-                            identification, recordOrigin);
-                }
-            }
-        } catch (IOException e) {
-            throw new IOException("Error al procesar el archivo Excel", e);
-        }
-
-        Set<BiometricRecord> biometricRecordSet = new HashSet<>(biometricRecordList);
-
-        Map<String, List<BiometricRecord>> groupByIdentification = biometricRecordSet.stream()
-                .collect(Collectors.groupingBy(item -> item.getEmployee().getIdentification()));
-
-        for (BiometricRecord biometricRecord : biometricRecordSet) {
-            attendanceRecordRepository.save(biometricRecord);
-        }
-
-        workDayService.processWorkdays(groupByIdentification);
-
+    for (BiometricRecord biometricRecord : biometricRecordSet) {
+      attendanceRecordRepository.save(biometricRecord);
     }
+
+    workDayService.processWorkdays(groupByIdentification);
+
+  }
 
 }
