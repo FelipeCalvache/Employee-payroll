@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Stack;
 
 @Service
@@ -20,7 +19,6 @@ public class ExcelService {
             Workbook workbook = new XSSFWorkbook()) {
       // Crear una hoja nueva
       Sheet sheet = workbook.createSheet("Reporte");
-      sheet.autoSizeColumn(0);
 
       // Crear estilos
       CellStyle headerStyle = workbook.createCellStyle();
@@ -35,6 +33,7 @@ public class ExcelService {
 
 
       Font headerFont = workbook.createFont();
+      headerFont.setFontHeightInPoints((short) 8);
       headerFont.setBold(true);
       headerFont.setColor(IndexedColors.WHITE.getIndex());
       headerStyle.setFont(headerFont);
@@ -57,9 +56,10 @@ public class ExcelService {
         Cell cell = headerRow.createCell(i);
         CellStyle cellStyleDefault = workbook.createCellStyle();
         cell.setCellStyle(this.setAllBordersAndCenter(cellStyleDefault));
+
         if (i < columns.length) {
           cell.setCellStyle(headerStyle);
-          sheet.setColumnWidth(i, 15 * 256);
+          sheet.setColumnWidth(i, 15 * 300);
           cell.setCellValue(columns[i]);
         }
 
@@ -69,9 +69,11 @@ public class ExcelService {
           cellStyleWithBorders.setFillForegroundColor(IndexedColors.ORANGE.getIndex());
           cellStyleWithBorders.setFillPattern(FillPatternType.SOLID_FOREGROUND);
           Font font = workbook.createFont();
+          font.setFontHeightInPoints((short) 8);
           font.setBold(true);
           font.setColor(IndexedColors.WHITE.getIndex());
           cellStyle.setFont(font);
+          cellStyle.setWrapText(true);
           cell.setCellStyle(cellStyle);
           cell.setCellValue("TOTAL HORAS");
           continue;
@@ -82,9 +84,11 @@ public class ExcelService {
           cellStyleWithBorders.setFillForegroundColor(IndexedColors.GREEN.getIndex());
           cellStyleWithBorders.setFillPattern(FillPatternType.SOLID_FOREGROUND);
           Font font = workbook.createFont();
+          font.setFontHeightInPoints((short) 8);
           font.setBold(true);
           font.setColor(IndexedColors.WHITE.getIndex());
           cellStyle.setFont(font);
+          cellStyle.setWrapText(true);
           cell.setCellStyle(cellStyle);
           cell.setCellValue("TOTAL COSTO");
           continue;
@@ -95,9 +99,11 @@ public class ExcelService {
           cellStyleWithBorders.setFillForegroundColor(IndexedColors.AQUA.getIndex());
           cellStyleWithBorders.setFillPattern(FillPatternType.SOLID_FOREGROUND);
           Font font = workbook.createFont();
+          font.setFontHeightInPoints((short) 8);
           font.setBold(true);
           font.setColor(IndexedColors.WHITE.getIndex());
           cellStyle.setFont(font);
+          cellStyle.setWrapText(true);
           cell.setCellStyle(cellStyle);
           cell.setCellValue("OTROS COSTOS");
         }
@@ -111,12 +117,16 @@ public class ExcelService {
       subTitle.addAll(Arrays.asList("VALOR HORA", "BONO", "PEOPLE PAST", "PRESTACIONES", "SEGURIDAD SOCIAL", "SUBSIDIO DE TRANSPORTE", "SALARIO BASICO"));
 
       Stack<String> subTitleThirdRow = new Stack<>();
-      subTitleThirdRow.addAll(Arrays.asList("COSTO DIARIO\n(HOY)", "JORNAL DIARIO", "COSTO TOTAL", " RECARGO DOMINICAL Y FESTIVO NOCTURNO 110%", "HORA EXTRA NOCTURNA DOMINICAL Y FESTIVA 250%", " HORA EXTRA DIURNA DOMINICAL Y FESTIVA 200%", "DOMINICALES Y FESTIVOS 1.75%", " RECARGO NOCTURNO. 0.35%", "EXTRA NOCTURNA 1.75%", " EXTRA DIURNA 1.25%", "HORA", "JORNAL", "RECARGO DOMINICAL Y FESTIVO NOCTURNO 110%", "HORA EXTRA NOCTURNA DOMINICAL Y FESTIVA 250%", "HORA EXTRA DIURNA DOMINICAL Y FESTIVA 200%", "DOMINICALES Y FESTIVOS 1.75%", "RECARGO NOCTURNO. 0.35%", "EXTRA NOCTURNA 1.75%", "EXTRA DIURNA 1.25%", "HORAS JORNAL"));
+      subTitleThirdRow.addAll(Arrays.asList("COSTO DIARIO\n(HOY)", "JORNAL DIARIO", "COSTO TOTAL", "RECARGO DOMINICAL Y\nFESTIVO NOCTURNO\n110%", "HORA EXTRA NOCTURNA\nDOMINICAL Y FESTIVA\n250%", "HORA EXTRA DIURNA\nDOMINICAL Y FESTIVA\n200%", "DOMINICALES Y\nFESTIVOS\n1.75%", "RECARGO\nNOCTURNO.\n0.35%", "EXTRA NOCTURNA\n1.75%", " EXTRA DIURNA\n1.25%", "HORA", "JORNAL", "RECARGO DOMINICAL Y\nFESTIVO NOCTURNO 110%", "HORA EXTRA NOCTURNA\nDOMINICAL Y FESTIVA\n250%", "HORA EXTRA DIURNA\nDOMINICAL Y FESTIVA\n200%", "DOMINICALES Y FESTIVOS\n1.75%", "RECARGO\nNOCTURNO.\n0.35%", "EXTRA NOCTURNA\n1.75%", "EXTRA DIURNA 1.25%", "HORAS JORNAL"));
 
       for (int i = 0; i <= 36; i++) {
         Cell cell = secondRow.createCell(i);
         CellStyle cellStyleDefault = workbook.createCellStyle();
+        Font font = workbook.createFont();
+        font.setFontHeightInPoints((short) 8);
+        cellStyleDefault.setWrapText(true);
         cell.setCellStyle(this.setAllBordersAndCenter(cellStyleDefault));
+        cellStyleDefault.setFont(font);
 
 
         if (i >= 10 && i <= 26) {
@@ -127,7 +137,9 @@ public class ExcelService {
           CellStyle cellStyle = workbook.createCellStyle();
           cellStyle.setFillForegroundColor(IndexedColors.AQUA.getIndex());
           cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-          cell.setCellStyle(cellStyle);
+          cellStyle.setFont(font);
+          cellStyle.setWrapText(true);
+          cell.setCellStyle(this.setAllBordersAndCenter(cellStyle));
           cell.setCellValue(subTitle.pop());
         }
 
@@ -135,14 +147,18 @@ public class ExcelService {
           CellStyle cellStyle = workbook.createCellStyle();
           cellStyle.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
           cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-          cell.setCellStyle(cellStyle);
+          cellStyle.setFont(font);
+          cellStyle.setWrapText(true);
+          cell.setCellStyle(this.setAllBordersAndCenter(cellStyle));
           cell.setCellValue("FORMULA");
         }
         if (i == 35) {
           CellStyle cellStyle = workbook.createCellStyle();
           cellStyle.setFillForegroundColor(IndexedColors.AQUA.getIndex());
           cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-          cell.setCellStyle(cellStyle);
+          cellStyle.setFont(font);
+          cellStyle.setWrapText(true);
+          cell.setCellStyle(this.setAllBordersAndCenter(cellStyle));
           cell.setCellValue(subTitle.pop());
         }
 
@@ -150,7 +166,9 @@ public class ExcelService {
           CellStyle cellStyle = workbook.createCellStyle();
           cellStyle.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
           cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-          cell.setCellStyle(cellStyle);
+          cellStyle.setFont(font);
+          cellStyle.setWrapText(true);
+          cell.setCellStyle(this.setAllBordersAndCenter(cellStyle));
           cell.setCellValue("FORMULA");
         }
       }
@@ -159,28 +177,34 @@ public class ExcelService {
         sheet.addMergedRegion(new CellRangeAddress(1, 2, i, i));
       }
 
-      sheet.addMergedRegion(new CellRangeAddress(1, 2, 35,35 ));
+      sheet.addMergedRegion(new CellRangeAddress(1, 2, 35, 35));
 
 
       Row thirdRow = sheet.createRow(2);
-      thirdRow.setHeight((short) 600);
+      thirdRow.setHeight((short) 800);
 
       for (int i = 0; i <= 36; i++) {
         Cell cell = thirdRow.createCell(i);
         CellStyle cellStyleDefault = workbook.createCellStyle();
         cell.setCellStyle(this.setAllBordersAndCenter(cellStyleDefault));
+        Font font = workbook.createFont();
+        font.setFontHeightInPoints((short) 8);
 
         if (i >= 10 && i <= 26) {
           if (i <= 17) {
             CellStyle cellStyle = workbook.createCellStyle();
             cellStyle.setFillForegroundColor(IndexedColors.ORANGE.getIndex());
             cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            cell.setCellStyle(cellStyle);
+            cellStyle.setFont(font);
+            cellStyle.setWrapText(true);
+            cell.setCellStyle(this.setAllBordersAndCenter(cellStyle));
           } else {
             CellStyle cellStyle = workbook.createCellStyle();
             cellStyle.setFillForegroundColor(IndexedColors.GREEN.getIndex());
             cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            cell.setCellStyle(cellStyle);
+            cellStyle.setFont(font);
+            cellStyle.setWrapText(true);
+            cell.setCellStyle(this.setAllBordersAndCenter(cellStyle));
           }
           cell.setCellValue(subTitleThirdRow.pop());
         }
@@ -189,7 +213,9 @@ public class ExcelService {
           CellStyle cellStyle = workbook.createCellStyle();
           cellStyle.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
           cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-          cell.setCellStyle(cellStyle);
+          cellStyle.setFont(font);
+          cellStyle.setWrapText(true);
+          cell.setCellStyle(this.setAllBordersAndCenter(cellStyle));
           cell.setCellValue(subTitleThirdRow.pop());
         }
 
@@ -197,47 +223,23 @@ public class ExcelService {
           CellStyle cellStyle = workbook.createCellStyle();
           cellStyle.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
           cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+          cellStyle.setFont(font);
           cellStyle.setWrapText(true);
-          cell.setCellStyle(cellStyle);
+          cell.setCellStyle(this.setAllBordersAndCenter(cellStyle));
           cell.setCellValue(subTitleThirdRow.pop());
         }
       }
 
-
+      for (int i = 0; i < columns.length; i++) {
+        sheet.addMergedRegion(new CellRangeAddress(0, 2, i, i));
+      }
       sheet.addMergedRegion(new CellRangeAddress(0, 0, 10, 17));
       sheet.addMergedRegion(new CellRangeAddress(0, 0, 18, 26));
       sheet.addMergedRegion(new CellRangeAddress(0, 0, 27, 36));
 
-      // Agregar datos de ejemplo
-//      Object[][] data = {
-//              {1, "Producto A", 100.50, 2, "=C2*D2"},
-//              {2, "Producto B", 50.75, 3, "=C3*D3"},
-//              {3, "Producto C", 75.25, 1, "=C4*D4"}
-//      };
-//
-//      int rowNum = 1;
-//      for (Object[] rowData : data) {
-//        Row row = sheet.createRow(rowNum++);
-//
-//        for (int colNum = 0; colNum < rowData.length; colNum++) {
-//          Cell cell = row.createCell(colNum);
-//          cell.setCellStyle(dataStyle);
-//
-//          Object value = rowData[colNum];
-//          if (value instanceof String) {
-//            // Para las fórmulas
-//            if (((String) value).startsWith("=")) {
-//              cell.setCellFormula(((String) value).substring(1));
-//            } else {
-//              cell.setCellValue((String) value);
-//            }
-//          } else if (value instanceof Integer) {
-//            cell.setCellValue((Integer) value);
-//          } else if (value instanceof Double) {
-//            cell.setCellValue((Double) value);
-//          }
-//        }
-//      }
+      for (int i = 0; i < sheet.getRow(0).getLastCellNum(); i++) {
+        sheet.autoSizeColumn(i);
+      }
 
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       workbook.write(bos);
